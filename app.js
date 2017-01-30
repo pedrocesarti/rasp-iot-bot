@@ -7,24 +7,16 @@ const app = express()
 
 app.set('port', (process.env.PORT || 5000))
 
-// Process application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({extended: false}))
-
-// Process application/json
 app.use(bodyParser.json())
 
-// Index Route
-app.get('/', function (req, res) {
-    res.send('Olá, Eu sou um bot')
-})
 
-app.get('/privacy/', function (req, res) {
-    res.send('Olá, essa é minha política de privacidade.')
-    res.sendStatus(200)
+app.get('/', function (req, res) {
+    res.send('Hi, I am a bot!')
 })
 
 var verify = process.env.VERIFY_VALUE
-// para verificacao do Facebook
+
 app.get('/webhook/', function (req, res) {
     if (req.query['hub.verify_token'] === verify) {
         res.send(req.query['hub.challenge'])
@@ -41,20 +33,18 @@ app.post('/webhook/', function (req, res) {
         let sender = event.sender.id
         if (event.message && event.message.text) {
             let text = event.message.text
-            if(text == "ligar"){
+            if(text == "turnon"){
 		rpio.open(12, rpio.OUTPUT, rpio.LOW);
-                sendTextMessage(sender, "Ligando a lampada 💡💡")
-		console.log("LED ligado")
+                sendTextMessage(sender, "Turning on the light 💡💡")
         	rpio.write(12, rpio.HIGH);
             }
-            else if(text == "desligar"){
+            else if(text == "turnoffr"){
         	rpio.write(12, rpio.LOW);
-                sendTextMessage(sender, "Desligando a lampada 🔌")
+                sendTextMessage(sender, "Turning off the lights 🔌")
 	    }
             else {
-                sendTextMessage(sender, "Você me disse " + text.substring(0, 200) + " " + "... hmm, não entendi...")
+                sendTextMessage(sender, text.substring(0, 200) + " " + "... hmm, I am only prepared to turnon or turnoff!")
             }
-           // sendTextMessage(sender, "heroku: " + text.substring(0, 200))
         }
     }
     res.sendStatus(200)
@@ -81,7 +71,6 @@ function sendTextMessage(sender, text) {
     })
 }
 
-// Spin up the server
 app.listen(app.get('port'), function() {
     console.log('running on port', app.get('port'))
 })
