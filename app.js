@@ -10,6 +10,7 @@ app.set('port', (process.env.PORT || 5000))
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
+
 app.get('/', function (req, res) {
     res.send('Hi, I am a bot!')
 })
@@ -23,25 +24,54 @@ app.get('/webhook/', function (req, res) {
     res.send('Error, wrong token')
 })
 
+var admin = require("firebase-admin");
+admin.initializeApp({
+  credential: admin.credential.cert("tmp/serviceAccountKey.json"),
+  databaseURL: "https://fiap-iot-bot.firebaseio.com"
+});
+
 app.post('/webhook/', function (req, res) {
     let messaging_events = req.body.entry[0].messaging
+    console.log(messaging_events);
     var rpio = require('rpio');
 
     for (let i = 0; i < messaging_events.length; i++) {
         let event = req.body.entry[0].messaging[i]
         let sender = event.sender.id
+	
+	var db = admin.database();
+        var ref = db.ref("server/message");
         if (event.message && event.message.text) {
+	    var msgRef = ref.child("msg");
             let text = event.message.text
             if(text == "turnon"){
+	    var unix = Math.round(+new Date()/1000);
 		rpio.open(12, rpio.OUTPUT, rpio.LOW);
                 sendTextMessage(sender, "Turning on the light 💡💡")
         	rpio.write(12, rpio.HIGH);
+            msgRef.push().set({
+            recipient: {id:sender},
+            message: text,
+	    timestamp: unix,
+            });
             }
             else if(text == "turnoff"){
         	rpio.write(12, rpio.LOW);
                 sendTextMessage(sender, "Turning off the lights 🔌")
+	    var unix = Math.round(+new Date()/1000);
+            msgRef.push().set({
+            recipient: {id:sender},
+            message: text,
+	    timestamp: unix,
+            });
 	    }
             else {
+	    var unix = Math.round(+new Date()/1000);
+            msgRef.push().set({
+            recipient: {id:sender},
+            message: "invalid",
+            timestamp: unix,
+            });
                 sendTextMessage(sender, text.substring(0, 200) + " " + "... hmm, I am only prepared to turnon or turnoff!")
             }
         }
@@ -63,9 +93,9 @@ function sendTextMessage(sender, text) {
         }
     }, function(error, response, body) {
         if (error) {
-            console.log('Error sending messages: ', error)
+           console.log('Error sending messages: ', error)
         } else if (response.body.error) {
-            console.log('Error: ', response.body.error)
+           console.log('Error: ', response.body.error)
         }
     })
 }
