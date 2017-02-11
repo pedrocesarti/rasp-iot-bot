@@ -3,6 +3,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
+var admin = require("firebase-admin");
 const app = express()
 
 app.set('port', (process.env.PORT || 5000))
@@ -24,7 +25,6 @@ app.get('/webhook/', function (req, res) {
     res.send('Error, wrong token')
 })
 
-var admin = require("firebase-admin");
 admin.initializeApp({
   credential: admin.credential.cert(process.env.PATH_AUTH),
   databaseURL: "https://fiap-iot-bot.firebaseio.com"
@@ -39,40 +39,29 @@ app.post('/webhook/', function (req, res) {
         let event = req.body.entry[0].messaging[i]
         let sender = event.sender.id
 	
-	var db = admin.database();
-        var ref = db.ref("server/message");
         if (event.message && event.message.text) {
-	    var msgRef = ref.child("msg");
             let text = event.message.text
             if(text == "turnon"){
-	    var unix = Math.round(+new Date()/1000);
-//		rpio.open(12, rpio.OUTPUT, rpio.LOW);
-                sendTextMessage(sender, "Turning on the light 💡💡")
-//        	rpio.write(12, rpio.HIGH);
-            msgRef.push().set({
-            recipient: {id:sender},
-            message: text,
-	    timestamp: unix,
-            });
+	       var unix = Math.round(+new Date()/1000);
+
+//	       rpio.open(12, rpio.OUTPUT, rpio.LOW);
+//             rpio.write(12, rpio.HIGH);
+
+               sendTextMessage(sender, "Turning on the light 💡💡")
+               sendToDB(sender, text, unix)
             }
             else if(text == "turnoff"){
- //       	rpio.write(12, rpio.LOW);
-                sendTextMessage(sender, "Turning off the lights 🔌")
-	    var unix = Math.round(+new Date()/1000);
-            msgRef.push().set({
-            recipient: {id:sender},
-            message: text,
-	    timestamp: unix,
-            });
+	       var unix = Math.round(+new Date()/1000);
+
+ //            rpio.write(12, rpio.LOW);
+               sendTextMessage(sender, "Turning off the lights 🔌")
+               sendToDB(sender, text, unix)
+
 	    }
             else {
-	    var unix = Math.round(+new Date()/1000);
-            msgRef.push().set({
-            recipient: {id:sender},
-            message: "invalid",
-            timestamp: unix,
-            });
-                sendTextMessage(sender, text.substring(0, 200) + " " + "... hmm, I am only prepared to turnon or turnoff!")
+	       var unix = Math.round(+new Date()/1000);
+	       sendToDB(sender, "invalid", unix)
+               sendTextMessage(sender, text.substring(0, 200) + " " + "... hmm, I am only prepared to turnon or turnoff!")
             }
         }
     }
@@ -98,6 +87,19 @@ function sendTextMessage(sender, text) {
            console.log('Error: ', response.body.error)
         }
     })
+}
+
+function sendToDB(sender, text, unix) { 
+	var db = admin.database();
+        var ref = db.ref("server/message");
+	var msgRef = ref.child("msg");
+	var req = {
+	    recipient: {id:sender},
+            message: text,
+            timestamp: unix,
+	};
+        msgRef.push().set(req);
+//	console.log(req);
 }
 
 app.listen(app.get('port'), function() {
