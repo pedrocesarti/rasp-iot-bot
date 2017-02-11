@@ -26,14 +26,14 @@ app.get('/webhook/', function (req, res) {
 
 var admin = require("firebase-admin");
 admin.initializeApp({
-  credential: admin.credential.cert("tmp/serviceAccountKey.json"),
+  credential: admin.credential.cert(process.env.PATH_AUTH),
   databaseURL: "https://fiap-iot-bot.firebaseio.com"
 });
 
 app.post('/webhook/', function (req, res) {
     let messaging_events = req.body.entry[0].messaging
     console.log(messaging_events);
-    var rpio = require('rpio');
+//   var rpio = require('rpio');
 
     for (let i = 0; i < messaging_events.length; i++) {
         let event = req.body.entry[0].messaging[i]
@@ -46,9 +46,9 @@ app.post('/webhook/', function (req, res) {
             let text = event.message.text
             if(text == "turnon"){
 	    var unix = Math.round(+new Date()/1000);
-		rpio.open(12, rpio.OUTPUT, rpio.LOW);
+//		rpio.open(12, rpio.OUTPUT, rpio.LOW);
                 sendTextMessage(sender, "Turning on the light 💡💡")
-        	rpio.write(12, rpio.HIGH);
+//        	rpio.write(12, rpio.HIGH);
             msgRef.push().set({
             recipient: {id:sender},
             message: text,
@@ -56,7 +56,7 @@ app.post('/webhook/', function (req, res) {
             });
             }
             else if(text == "turnoff"){
-        	rpio.write(12, rpio.LOW);
+ //       	rpio.write(12, rpio.LOW);
                 sendTextMessage(sender, "Turning off the lights 🔌")
 	    var unix = Math.round(+new Date()/1000);
             msgRef.push().set({
