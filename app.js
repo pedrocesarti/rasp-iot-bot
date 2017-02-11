@@ -4,6 +4,9 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
 var admin = require("firebase-admin");
+var network = require('network');
+var iplocation = require('iplocation')
+
 const app = express()
 
 app.set('port', (process.env.PORT || 5000))
@@ -93,13 +96,25 @@ function sendToDB(sender, text, unix) {
 	var db = admin.database();
         var ref = db.ref("server/message");
 	var msgRef = ref.child("msg");
+	var location = geoIP();
 	var req = {
 	    recipient: {id:sender},
             message: text,
             timestamp: unix,
 	};
+//	    geolocation: location,
         msgRef.push().set(req);
 //	console.log(req);
+	console.log(location);
+}
+
+function geoIP(){
+network.get_public_ip(function(err, ip) {
+        iplocation(ip, function (error, res) {
+	return res;
+//        console.log(res);
+        })
+})
 }
 
 app.listen(app.get('port'), function() {
