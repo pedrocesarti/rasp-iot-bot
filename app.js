@@ -36,7 +36,7 @@ admin.initializeApp({
 app.post('/webhook/', function (req, res) {
     let messaging_events = req.body.entry[0].messaging
     console.log(messaging_events);
-    //   var rpio = require('rpio');
+       var rpio = require('rpio');
 
     for (let i = 0; i < messaging_events.length; i++) {
         let event = req.body.entry[0].messaging[i]
@@ -47,8 +47,8 @@ app.post('/webhook/', function (req, res) {
             if (text == "turnon") {
                 var unix = Math.round(+new Date() / 1000);
 
-                //	       rpio.open(12, rpio.OUTPUT, rpio.LOW);
-                //             rpio.write(12, rpio.HIGH);
+                rpio.open(12, rpio.OUTPUT, rpio.LOW);
+                rpio.write(12, rpio.HIGH);
 
                 sendTextMessage(sender, "Turning on the light 💡💡")
                 sendToDB(sender, text, unix)
@@ -56,7 +56,7 @@ app.post('/webhook/', function (req, res) {
             else if (text == "turnoff") {
                 var unix = Math.round(+new Date() / 1000);
 
-                //            rpio.write(12, rpio.LOW);
+                rpio.write(12, rpio.LOW);
                 sendTextMessage(sender, "Turning off the lights 🔌")
                 sendToDB(sender, text, unix)
 
@@ -112,10 +112,6 @@ function sendToDB(sender, text, unix) {
             })
         });
 }
-
-// function geoIP() {
-    
-// }
 
 app.listen(app.get('port'), function () {
     console.log('running on port', app.get('port'))
