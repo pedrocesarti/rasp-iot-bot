@@ -11,7 +11,6 @@
   "dependencies": {
     "body-parser": "^1.16.0",
     "express": "^4.14.0",
-    "firebase": "^3.6.8",
     "firebase-admin": "^4.1.0",
     "iplocation": "^2.0.1",
     "network": "^0.3.2",
